@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Platform</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+<header>
+    <div class="header-row">
+        <h1>👕 Fashion AI Platform</h1>
+
+        <!-- Hamburger -->
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+        <!-- Desktop Nav -->
+        <nav class="desktop-nav">
+            <a href="/">All Products</a>
+            <a href="/ai-search">AI Search</a>
+<a href="/cart">
+    Cart (<span id="cartCount">{{ cart_count }}</span>)
+</a>
+
+            {% if session.get("user_name") %}
+                <span>Hi, {{ session.user_name }}</span>
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<!-- Mobile Sidebar -->
+<div id="sidebar" class="sidebar">
+    <a href="/" onclick="toggleSidebar()">All Products</a>
+    <a href="/ai-search" onclick="toggleSidebar()">AI Search</a>
+    <a href="/cart" onclick="toggleSidebar()">Cart</a>
+</div>
+
+<div class="container">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</div>
+
+{% if not session.get("user_id") %}
+<div id="loginModal" class="modal-overlay">
+    <div class="modal auth-modal">
+        <button class="modal-close" onclick="closeLoginModal()">×</button>
+
+        <h3>Login to continue</h3>
+        <p class="modal-subtitle">
+            Sign in to get personalized recommendations and faster checkout
+        </p>
+
+<form method="POST" action="/login?next={{ request.path }}">
+            <input type="email" name="email" placeholder="Email address" required>
+            <input type="password" name="password" placeholder="Password" required>
+
+            <button type="submit" class="btn-primary">Login</button>
+        </form>
+
+        <p class="modal-footer">
+            New here?
+            <a href="/register">Create an account</a>
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Scripts -->
+<script>
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+}
+(function () {
+    const modal = document.getElementById("loginModal");
+    if (!modal) return;
+
+    if (sessionStorage.getItem("loginModalClosed")) return;
+
+    setTimeout(() => {
+        modal.style.display = "flex";
+    }, 10000);
+})();
+
+function closeLoginModal() {
+    const modal = document.getElementById("loginModal");
+    modal.style.display = "none";
+    sessionStorage.setItem("loginModalClosed", "true");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const isLoggedIn = {{ (session.get("user_id") is not none) | tojson }};
+
+    document.querySelectorAll(".auth-required").forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            if (isLoggedIn) return;
+
+            e.preventDefault();
+            const modal = document.getElementById("loginModal");
+            if (modal) modal.style.display = "flex";
+        });
+    });
+});
+
+document.addEventListener("click", function (e) {
+    const sidebar = document.getElementById("sidebar");
+    const menuBtn = document.querySelector(".menu-btn");
+
+    if (
+        sidebar.classList.contains("open") &&
+        !sidebar.contains(e.target) &&
+        !menuBtn.contains(e.target)
+    ) {
+        sidebar.classList.remove("open");
+    }
+});
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.classList.add("show");
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2500);
+}
+</script>
+<div id="toast" class="toast"></div>
+<footer class="site-footer">
+    <div class="footer-container">
+
+        <!-- Brand -->
+        <div class="footer-brand">
+            <h3>👕 Fashion AI</h3>
+            <p>Smart fashion discovery powered by Artificial Intelligence.</p>
+        </div>
+
+        <!-- Links -->
+        <div class="footer-links">
+            <h4>Explore</h4>
+            <a href="/">Shop</a>
+            <a href="/ai-search">AI Search</a>
+            <a href="/cart">Cart</a>
+        </div>
+
+        <div class="footer-links">
+            <h4>Account</h4>
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+            <a href="/logout">Logout</a>
+        </div>
+
+        <div class="footer-links">
+            <h4>Legal</h4>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms</a>
+            <a href="#">Support</a>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © {{ 2026 }} Fashion AI Platform ·
+    </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a>
+    <span>›</span>
+    <span>Cart</span>
+</div>
+
+<h2>Your Cart</h2>
+
+{% if products %}
+    <div class="cart-grid">
+        {% for product in products %}
+            <div class="cart-item">
+<img src="/static/images/{{ product.image }}"
+     alt="{{ product.name }}"
+     loading="lazy">
+
+                <div>
+                    <h4>{{ product.name }}</h4>
+                    <p>Price: ₹{{ product.price }}</p>
+                </div>
+
+                <form method="POST" action="/remove-from-cart/{{ product.id }}">
+                    <button type="submit" class="btn-remove">Remove</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
+   <div class="cart-summary">
+
+    <div class="summary-box">
+        <h3>Order Summary</h3>
+
+        <div class="summary-row">
+            <span>Items</span>
+            <span>{{ products|length }}</span>
+        </div>
+
+        <div class="summary-row total">
+            <span>Total</span>
+            <span>₹{{ products|length * 999 }}</span>
+        </div>
+
+        <form method="POST" action="/checkout">
+            <button type="submit"
+                    class="btn-checkout auth-required"
+                    data-action="checkout">
+                Place Order →
+            </button>
+        </form>
+    </div>
+
+</div>
+
+
+{% else %}
+    <p>Your cart is empty.</p>
+{% endif %}
+
+<a href="/" class="btn-primary">← Continue Shopping</a>
+{% endblock %}

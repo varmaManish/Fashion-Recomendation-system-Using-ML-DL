@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Order Summary</h2>
+
+<ul>
+    {% for product in products %}
+        <li>{{ product.name }} – ₹{{ product.price }}</li>
+    {% endfor %}
+</ul>
+
+<hr>
+<h3>Total: ₹{{ total }}</h3>
+
+<form method="POST" action="/place-order">
+    <button type="submit" class="btn-checkout">Place Order</button>
+</form>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>
+            Discover Fashion<br>
+            <span>Powered by AI</span>
+        </h1>
+        <p>
+            Upload any outfit or browse our catalog to get
+            visually similar fashion recommendations instantly.
+        </p>
+
+        <div class="hero-actions">
+            <a href="/ai-search" class="btn-primary">Try AI Search</a>
+            <a href="#products" class="btn-outline">Browse Collection</a>
+        </div>
+    </div>
+
+    <div class="hero-image">
+        <img src="/static/images/Hero.png" alt="AI Fashion">
+    </div>
+</section>
+
+<div id="products"></div>
+
+<div class="breadcrumb">
+    <a href="/">Home</a>
+    <span>›</span>
+    <span>Shop</span>
+</div>
+
+<h2>All Products</h2>
+<p>Browse our collection</p>
+
+<div class="grid">
+    {% for product in products %}
+    <div class="card">
+
+        <!-- Product navigation -->
+        <a href="/product/{{ product.id }}" style="text-decoration:none; color:inherit;">
+            <img src="/static/images/{{ product.image }}"
+                 alt="{{ product.name }}"
+                 loading="lazy"
+                 decoding="async"
+                 fetchpriority="high">
+            <p><strong>{{ product.name }}</strong></p>
+        </a>
+
+        <!-- Actions -->
+        <div class="card-actions">
+
+            <!-- ✅ FIXED: Add to Cart (NO form, NO redirect) -->
+            <button
+                type="button"
+                class="btn-outline js-add-to-cart"
+                data-id="{{ product.id }}">
+                Add Cart
+            </button>
+
+            <!-- Buy Now (kept as form) -->
+            <form method="POST" action="/buy-now/{{ product.id }}">
+                <button
+                    type="submit"
+                    class="btn-primary auth-required">
+                    Buy Now
+                </button>
+            </form>
+
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    {% if page > 1 %}
+        <a href="/?page={{ page - 1 }}">← Prev</a>
+    {% endif %}
+
+    <span class="page-indicator">
+        Page {{ page }} of {{ total_pages }}
+    </span>
+
+    {% if page < total_pages %}
+        <a href="/?page={{ page + 1 }}">Next →</a>
+    {% endif %}
+</div>
+
+<!-- ✅ SHOP PAGE SCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(".js-add-to-cart").forEach(btn => {
+        btn.addEventListener("click", function () {
+
+            const productId = btn.dataset.id;
+
+            fetch(`/add-to-cart/${productId}`, {
+                method: "POST"
+            })
+            .then(res => {
+                if (res.ok) {
+                    showToast("Added to cart");
+
+                    // update cart count live
+                    fetch("/cart-count")
+                        .then(r => r.json())
+                        .then(data => {
+                            const el = document.getElementById("cartCount");
+                            if (el) el.innerText = data.count;
+                        });
+                }
+            });
+
+        });
+    });
+
+});
+</script>
+
+{% endblock %}

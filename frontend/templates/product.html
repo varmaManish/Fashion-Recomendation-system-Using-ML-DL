@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a>
+    <span>›</span>
+    <span>{{ product.name }}</span>
+</div>
+
+<a href="/" class="back-link">← Back to All Products</a>
+
+<div class="product-page">
+
+    <!-- LEFT: IMAGE -->
+    <div class="product-image">
+        <img src="/static/images/{{ product.image }}" alt="{{ product.name }}">
+    </div>
+
+    <!-- RIGHT: INFO -->
+    <div class="product-info">
+
+        <h2>{{ product.name }}</h2>
+
+        <div class="product-price">₹999</div>
+
+        <div class="product-actions">
+
+            <!-- BUY NOW (PRIMARY) -->
+            <form method="POST" action="/buy-now/{{ product.id }}">
+                <button type="submit"
+                        class="btn-primary auth-required"
+                        data-action="buy">
+                    Buy Now
+                </button>
+            </form>
+
+            <!-- ADD TO CART (SECONDARY) -->
+            <button
+    type="button"
+    class="btn-outline js-add-to-cart"
+    data-id="{{ product.id }}">
+    Add to Cart
+</button>
+
+
+        </div>
+    </div>
+
+</div>
+
+<h3 class="section-title">Recommended Products</h3>
+
+<div class="grid">
+    {% for item in recommendations %}
+        <div class="card">
+            <a href="/product/{{ item.id }}" style="text-decoration:none; color:inherit;">
+                <img src="{{ item.image }}" alt="{{ item.name }}">
+                <p><strong>{{ item.name }}</strong></p>
+            </a>
+        </div>
+    {% endfor %}
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(".js-add-to-cart").forEach(btn => {
+        btn.addEventListener("click", function () {
+
+            const productId = btn.dataset.id;
+
+            fetch(`/add-to-cart/${productId}`, {
+                method: "POST"
+            })
+            .then(res => {
+                if (res.ok) {
+                    showToast("Added to cart");
+
+                    fetch("/cart-count")
+                        .then(r => r.json())
+                        .then(data => {
+                            const el = document.getElementById("cartCount");
+                            if (el) el.innerText = data.count;
+                        });
+                }
+            });
+
+        });
+    });
+
+});
+</script>
+
+{% endblock %}

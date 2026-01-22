@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+
+        <h2>Welcome Back</h2>
+        <p class="auth-subtitle">Login to continue shopping</p>
+
+        <form method="POST" action="/login?next={{ request.args.get('next','/') }}">
+            <input type="email" name="email" placeholder="Email address" required>
+            <input type="password" name="password" placeholder="Password" required>
+
+            <button type="submit" class="btn-primary">Login</button>
+        </form>
+
+        <p class="auth-footer">
+            Don’t have an account?
+            <a href="/register">Create one</a>
+        </p>
+
+    </div>
+</div>
+{% endblock %}

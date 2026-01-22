@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ai-search">
+ <div class="ai-upload">
+    <!-- Upload from device -->
+    <label class="btn-outline">
+        📁 Upload Image
+        <input
+            type="file"
+            id="imageInput"
+            accept="image/*"
+            hidden
+            onchange="searchImage()">
+    </label>
+
+    <p >OR</p>
+
+    <!-- Use camera -->
+    <button class="btn-primary" onclick="openCamera()">📸 Use Camera</button>
+
+    <!-- Mobile native camera input -->
+    <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        id="mobileCameraInput"
+        hidden>
+
+    <!-- Camera preview -->
+    <div class="ai-preview" id="cameraSection" style="display:none;">
+        <video id="video" autoplay playsinline muted></video>
+        <br><br>
+        <button class="btn-primary" onclick="capturePhoto()">Capture & Search</button>
+        <canvas id="canvas" hidden></canvas>
+    </div>
+
+    <!-- Image preview -->
+    <div id="preview" class="ai-preview"></div>
+
+</div>
+
+
+
+    <div class="ai-results">
+        <h3>Results</h3>
+        <div id="results" class="grid"></div>
+    </div>
+
+</div>
+
+<script>
+function searchImage() {
+    const input = document.getElementById("imageInput");
+    const file = input.files[0];
+
+    if (!file) {
+        alert("Please upload an image first.");
+        return;
+    }
+
+    const previewDiv = document.getElementById("preview");
+    previewDiv.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    previewDiv.appendChild(img);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    fetch("/api/recommend", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        renderResults(data.recommendations);
+    })
+    .catch(() => {
+        alert("Error fetching recommendations");
+    });
+}
+
+function renderResults(items) {
+    function bindCartButtons() {
+    document.querySelectorAll(".add-to-cart-btn").forEach(btn => {
+        btn.onclick = () => {
+            fetch(`/add-to-cart/${btn.dataset.id}`, { method: "POST" })
+                .then(() => {
+                    showToast("Added to cart successfully");
+                });
+        };
+    });
+}
+
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "";
+
+    items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+    <img src="${item.image}">
+    <p><strong>${item.name}</strong></p>
+
+    <div class="card-actions">
+
+        <button class="btn-outline add-to-cart-btn"
+                data-id="${item.id}">
+            Add to Cart
+        </button>
+
+        <form method="POST" action="/buy-now/${item.id}">
+            <button class="btn-primary auth-required">
+                Buy Now
+            </button>
+        </form>
+
+    </div>
+`;
+        bindCartButtons();
+        resultsDiv.appendChild(card);
+    });
+}
+let stream;
+function openCamera() {
+    // Mobile detection
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        document.getElementById("mobileCameraInput").click();
+        return;
+    }
+
+    const cameraSection = document.getElementById("cameraSection");
+    cameraSection.style.display = "block";
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(s => {
+            stream = s;
+            document.getElementById("video").srcObject = stream;
+        })
+        .catch(() => {
+            alert("Camera access denied.");
+        });
+}
+
+/* Mobile native camera handler */
+document.getElementById("mobileCameraInput").addEventListener("change", function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const previewDiv = document.getElementById("preview");
+    previewDiv.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    previewDiv.appendChild(img);
+
+    sendImage(file);
+});
+
+
+function capturePhoto() {
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const previewDiv = document.getElementById("preview");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(blob => {
+        previewDiv.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(blob);
+        previewDiv.appendChild(img);
+
+        sendImage(blob);
+    }, "image/jpeg");
+
+    // stop camera
+    /* 🔥 IMPORTANT FIX */
+ 
+const cameraSection = document.getElementById("cameraSection");
+
+if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+}
+
+cameraSection.style.display = "none";
+}
+
+function sendImage(blob) {
+    const formData = new FormData();
+    formData.append("image", blob, "camera.jpg");
+
+    fetch("/api/recommend", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        renderResults(data.recommendations);
+    })
+    .catch(() => {
+        alert("Error getting recommendations");
+    });
+}
+
+</script>
+{% endblock %}
