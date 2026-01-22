@@ -6,7 +6,7 @@ A full-stack Machine Learning + Deep Learning project that demonstrates a **fash
 
 ## 🚀 Project Overview
 
-This repository contains the codebase for a **Fashion Recommendation System** built with Python and ML/DL techniques. The system analyzes fashion item images and returns similar or complementary suggestions — the kind of capability you see on modern eCommerce platforms.:contentReference[oaicite:2]{index=2}
+This repository contains the codebase for a **Fashion Recommendation System** built with Python and ML/DL techniques. The system analyzes fashion item images and returns similar or complementary suggestions — the kind of capability you see on modern eCommerce platforms.
 
 It’s designed to demonstrate:
 - Image feature extraction using Deep Learning  
@@ -25,7 +25,6 @@ It’s designed to demonstrate:
 ---
 
 
----
 
 ## 📦 Dependencies
 
@@ -33,7 +32,6 @@ Install all dependencies with:
 
 ```bash
 pip install -r requirement.txt
-code
 git clone https://github.com/varmaManish/Fashion-Recomendation-system-Using-ML-DL.git
 cd Fashion-Recomendation-system-Using-ML-DL
 
