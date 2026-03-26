@@ -1,214 +1,539 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="ai-search">
- <div class="ai-upload">
-    <!-- Upload from device -->
-    <label class="btn-outline">
-        📁 Upload Image
-        <input
-            type="file"
-            id="imageInput"
-            accept="image/*"
-            hidden
-            onchange="searchImage()">
-    </label>
 
-    <p >OR</p>
+<style>
+/* ── AI Search – uses existing main.css variables throughout ── */
 
-    <!-- Use camera -->
-    <button class="btn-primary" onclick="openCamera()">📸 Use Camera</button>
+.ai-search-hero {
+    background: var(--cta-gradient);
+    color: #fff;
+    text-align: center;
+    padding: 3rem 1.5rem 2.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2.5rem;
+}
+.ai-search-hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+.ai-search-hero p {
+    opacity: .85;
+    font-size: 1rem;
+}
 
-    <!-- Mobile native camera input -->
-    <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        id="mobileCameraInput"
-        hidden>
+/* ── Upload zone ── */
+.upload-zone {
+    max-width: 540px;
+    margin: 0 auto 2rem;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--bg-main);
+}
+.upload-zone:hover,
+.upload-zone.drag-over {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+}
+.upload-zone .upload-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+.upload-zone h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+.upload-zone p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+.upload-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.25rem;
+}
 
-    <!-- Camera preview -->
-    <div class="ai-preview" id="cameraSection" style="display:none;">
-        <video id="video" autoplay playsinline muted></video>
-        <br><br>
-        <button class="btn-primary" onclick="capturePhoto()">Capture & Search</button>
-        <canvas id="canvas" hidden></canvas>
+/* ── Preview ── */
+#preview-wrap {
+    max-width: 540px;
+    margin: 0 auto 1.5rem;
+    display: none;
+    text-align: center;
+}
+#preview-wrap img {
+    max-height: 260px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    object-fit: cover;
+}
+.preview-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+/* ── Section headers ── */
+.ai-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2.5rem 0 1.25rem;
+}
+.ai-section-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.ai-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 99px;
+    background: var(--brand-soft);
+    color: var(--brand);
+}
+.ai-badge.web {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* ── Results grids ── */
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
+}
+
+/* Local store card — matches .card from main.css */
+.local-card {
+    background: var(--bg-main);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+.local-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+.local-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+.local-card-body {
+    padding: 0.75rem 1rem 1rem;
+}
+.local-card-body h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sim-badge {
+    font-size: 0.72rem;
+    color: var(--brand);
+    font-weight: 600;
+}
+
+/* Web results card */
+.web-card {
+    background: var(--bg-main);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+.web-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+.web-card-thumb {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: var(--bg-muted);
+}
+.web-card-body {
+    padding: 0.75rem 1rem 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.web-card-source {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.web-card-source img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    border-radius: 2px;
+    display: inline;
+}
+.web-card-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.web-card-price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--brand);
+}
+.web-card-rating {
+    font-size: 0.72rem;
+    color: #f59e0b;
+}
+.web-card-btn {
+    display: block;
+    margin-top: auto;
+    padding: 0.5rem;
+    text-align: center;
+    background: var(--cta-gradient);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: var(--transition);
+}
+.web-card-btn:hover {
+    background: var(--brand-dark);
+    color: #fff;
+}
+
+/* ── Spinner ── */
+.ai-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+.spinner-ring {
+    width: 46px;
+    height: 46px;
+    border: 4px solid var(--border);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: ai-spin 0.8s linear infinite;
+}
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+
+/* ── Empty state ── */
+.ai-empty {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+.ai-empty span { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+/* ── Camera modal (uses existing .modal-overlay from main.css) ── */
+#camera-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.65);
+    backdrop-filter: blur(6px);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+}
+#camera-modal.open { display: flex; }
+.camera-box {
+    background: var(--bg-main);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 1.75rem;
+    width: min(500px, 95vw);
+    text-align: center;
+    animation: modalPop 0.3s ease;
+}
+.camera-box h3 {
+    font-weight: 800;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+#camera-stream {
+    width: 100%;
+    border-radius: var(--radius-md);
+    background: #000;
+    max-height: 340px;
+}
+.camera-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 480px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<!-- Hero -->
+<section class="ai-search-hero">
+    <h1>🔍 Visual Fashion Search</h1>
+    <p>Upload or capture any fashion image — find matches from your store <em>and</em> the entire web.</p>
+</section>
+
+<!-- Upload zone -->
+<div class="upload-zone" id="drop-zone">
+    <span class="upload-icon">📸</span>
+    <h3>Drop your image here</h3>
+    <p>JPG, PNG, WEBP — max 10 MB</p>
+    <div class="upload-actions">
+        <button class="btn-primary" onclick="document.getElementById('file-input').click()">📁 Choose File</button>
+        <button class="btn-outline" onclick="openCamera()">📷 Use Camera</button>
     </div>
+    <input type="file" id="file-input" accept="image/*" style="display:none" />
+</div>
 
-    <!-- Image preview -->
-    <div id="preview" class="ai-preview"></div>
+<!-- Preview -->
+<div id="preview-wrap">
+    <img id="preview-img" src="" alt="preview" />
+    <div class="preview-actions">
+        <button class="btn-primary" id="search-btn" onclick="runSearch()">🚀 Search Now</button>
+        <button class="btn-outline" onclick="clearImage()">✕ Clear</button>
+    </div>
+</div>
+
+<!-- Results -->
+<div id="results-wrapper" style="display:none">
+
+    <div class="ai-section-header">
+        <h2>🏬 From Our Store</h2>
+        <span class="ai-badge">AI Match</span>
+    </div>
+    <div id="local-state"></div>
+    <div class="results-grid" id="local-grid"></div>
+
+    <div class="ai-section-header">
+        <h2>🌐 From the Web</h2>
+        <span class="ai-badge web">Search engine</span>
+    </div>
+    <div id="web-state"></div>
+    <div class="results-grid" id="web-grid"></div>
 
 </div>
 
-
-
-    <div class="ai-results">
-        <h3>Results</h3>
-        <div id="results" class="grid"></div>
+<!-- Camera modal -->
+<div id="camera-modal">
+    <div class="camera-box">
+        <h3>📷 Capture Image</h3>
+        <video id="camera-stream" autoplay playsinline></video>
+        <canvas id="camera-canvas" style="display:none"></canvas>
+        <div class="camera-actions">
+            <button class="btn-primary" onclick="capturePhoto()">📸 Capture</button>
+            <button class="btn-outline" onclick="closeCamera()">✕ Close</button>
+        </div>
     </div>
-
 </div>
 
 <script>
-function searchImage() {
-    const input = document.getElementById("imageInput");
-    const file = input.files[0];
+let selectedFile = null;
+let cameraStream = null;
 
-    if (!file) {
-        alert("Please upload an image first.");
-        return;
-    }
-
-    const previewDiv = document.getElementById("preview");
-    previewDiv.innerHTML = "";
-
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    previewDiv.appendChild(img);
-
-    const formData = new FormData();
-    formData.append("image", file);
-
-    fetch("/api/recommend", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        renderResults(data.recommendations);
-    })
-    .catch(() => {
-        alert("Error fetching recommendations");
-    });
-}
-
-function renderResults(items) {
-    function bindCartButtons() {
-    document.querySelectorAll(".add-to-cart-btn").forEach(btn => {
-        btn.onclick = () => {
-            fetch(`/add-to-cart/${btn.dataset.id}`, { method: "POST" })
-                .then(() => {
-                    showToast("Added to cart successfully");
-                });
-        };
-    });
-}
-
-    const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = "";
-
-    items.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        card.innerHTML = `
-    <img src="${item.image}">
-    <p><strong>${item.name}</strong></p>
-
-    <div class="card-actions">
-
-        <button class="btn-outline add-to-cart-btn"
-                data-id="${item.id}">
-            Add to Cart
-        </button>
-
-        <form method="POST" action="/buy-now/${item.id}">
-            <button class="btn-primary auth-required">
-                Buy Now
-            </button>
-        </form>
-
-    </div>
-`;
-        bindCartButtons();
-        resultsDiv.appendChild(card);
-    });
-}
-let stream;
-function openCamera() {
-    // Mobile detection
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        document.getElementById("mobileCameraInput").click();
-        return;
-    }
-
-    const cameraSection = document.getElementById("cameraSection");
-    cameraSection.style.display = "block";
-
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(s => {
-            stream = s;
-            document.getElementById("video").srcObject = stream;
-        })
-        .catch(() => {
-            alert("Camera access denied.");
-        });
-}
-
-/* Mobile native camera handler */
-document.getElementById("mobileCameraInput").addEventListener("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    const previewDiv = document.getElementById("preview");
-    previewDiv.innerHTML = "";
-
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    previewDiv.appendChild(img);
-
-    sendImage(file);
+// File input
+document.getElementById('file-input').addEventListener('change', e => {
+    if (e.target.files[0]) setImage(e.target.files[0]);
 });
 
+// Drag & drop
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) setImage(e.dataTransfer.files[0]);
+});
+
+function setImage(file) {
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        document.getElementById('preview-img').src = ev.target.result;
+        document.getElementById('preview-wrap').style.display = 'block';
+        document.getElementById('drop-zone').style.display   = 'none';
+        document.getElementById('results-wrapper').style.display = 'none';
+        document.getElementById('local-grid').innerHTML = '';
+        document.getElementById('web-grid').innerHTML   = '';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearImage() {
+    selectedFile = null;
+    document.getElementById('preview-wrap').style.display    = 'none';
+    document.getElementById('drop-zone').style.display       = 'block';
+    document.getElementById('results-wrapper').style.display = 'none';
+    document.getElementById('file-input').value = '';
+}
+
+// Camera
+async function openCamera() {
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        document.getElementById('camera-stream').srcObject = cameraStream;
+        document.getElementById('camera-modal').classList.add('open');
+    } catch { alert('Camera permission denied or not available.'); }
+}
 
 function capturePhoto() {
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const previewDiv = document.getElementById("preview");
-
-    canvas.width = video.videoWidth;
+    const video  = document.getElementById('camera-stream');
+    const canvas = document.getElementById('camera-canvas');
+    canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
-
+    canvas.getContext('2d').drawImage(video, 0, 0);
     canvas.toBlob(blob => {
-        previewDiv.innerHTML = "";
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(blob);
-        previewDiv.appendChild(img);
-
-        sendImage(blob);
-    }, "image/jpeg");
-
-    // stop camera
-    /* 🔥 IMPORTANT FIX */
- 
-const cameraSection = document.getElementById("cameraSection");
-
-if (stream) {
-    stream.getTracks().forEach(track => track.stop());
+        setImage(new File([blob], 'capture.jpg', { type: 'image/jpeg' }));
+        closeCamera();
+    }, 'image/jpeg', 0.9);
 }
 
-cameraSection.style.display = "none";
+function closeCamera() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    document.getElementById('camera-modal').classList.remove('open');
 }
 
-function sendImage(blob) {
-    const formData = new FormData();
-    formData.append("image", blob, "camera.jpg");
+// Search
+async function runSearch() {
+    if (!selectedFile) { alert('Please select an image first.'); return; }
 
-    fetch("/api/recommend", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        renderResults(data.recommendations);
-    })
-    .catch(() => {
-        alert("Error getting recommendations");
-    });
+    const btn = document.getElementById('search-btn');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Searching…';
+
+    document.getElementById('results-wrapper').style.display = 'block';
+    showSpinner('local-state', 'Finding store matches…');
+    showSpinner('web-state',   'Searching the web via engine');
+    document.getElementById('local-grid').innerHTML = '';
+    document.getElementById('web-grid').innerHTML   = '';
+
+    const form = new FormData();
+    form.append('image', selectedFile);
+
+    const [localRes, webRes] = await Promise.allSettled([
+        fetch('/api/recommend',  { method: 'POST', body: form }),
+        fetch('/api/web-search', { method: 'POST', body: form }),
+    ]);
+
+    clearState('local-state');
+    if (localRes.status === 'fulfilled' && localRes.value.ok) {
+        const data = await localRes.value.json();
+        renderLocalResults(data.recommendations || []);
+    } else {
+        showEmpty('local-state', 'Could not load store matches.');
+    }
+
+    clearState('web-state');
+    if (webRes.status === 'fulfilled' && webRes.value.ok) {
+        const data = await webRes.value.json();
+        renderWebResults(data.web_results || []);
+    } else {
+        showEmpty('web-state', 'Web search unavailable. Check your SERPAPI_KEY.');
+    }
+
+    btn.disabled    = false;
+    btn.textContent = '🚀 Search Now';
 }
 
+// Renderers
+function renderLocalResults(items) {
+    const grid = document.getElementById('local-grid');
+    if (!items.length) { showEmpty('local-state', 'No store matches found.'); return; }
+    grid.innerHTML = items.map(p => `
+        <a class="local-card" href="/product/${p.id}">
+            <img src="/static/images/${p.image.replace('/static/images/', '')}"
+                 alt="${p.name}" loading="lazy"
+                 onerror="this.src='/static/images/placeholder.jpg'" />
+            <div class="local-card-body">
+                <h4>${p.name}</h4>
+                <span class="sim-badge">⚡ ${(p.similarity * 100).toFixed(1)}% match</span>
+            </div>
+        </a>`).join('');
+}
+
+function renderWebResults(items) {
+    const grid = document.getElementById('web-grid');
+    if (!items.length) { showEmpty('web-state', 'No web results found.'); return; }
+    grid.innerHTML = items.map(p => `
+        <div class="web-card">
+            <img class="web-card-thumb" src="${p.thumbnail}" alt="${p.title}"
+                 loading="lazy" onerror="this.style.background='var(--bg-muted)'" />
+            <div class="web-card-body">
+                <div class="web-card-source">
+                    ${p.source_icon ? `<img src="${p.source_icon}" alt="" />` : ''}
+                    ${p.source}
+                </div>
+                <div class="web-card-title">${p.title}</div>
+                ${p.price  ? `<div class="web-card-price">${p.price}</div>` : ''}
+                ${p.rating ? `<div class="web-card-rating">${'★'.repeat(Math.round(p.rating))} ${p.rating}</div>` : ''}
+                <a class="web-card-btn" href="${p.link}" target="_blank" rel="noopener">
+                    View on ${p.source} →
+                </a>
+            </div>
+        </div>`).join('');
+}
+
+// Helpers
+function showSpinner(id, msg) {
+    document.getElementById(id).innerHTML = `
+        <div class="ai-spinner">
+            <div class="spinner-ring"></div>
+            <span>${msg}</span>
+        </div>`;
+}
+function clearState(id)     { document.getElementById(id).innerHTML = ''; }
+function showEmpty(id, msg) {
+    document.getElementById(id).innerHTML = `
+        <div class="ai-empty">
+            <span>🤷</span>${msg}
+        </div>`;
+}
 </script>
+
 {% endblock %}

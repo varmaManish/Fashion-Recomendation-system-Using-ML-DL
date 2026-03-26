@@ -5,10 +5,6 @@ import os
 
 
 def create_app():
-    """
-    Application factory.
-    Creates and configures the Flask app.
-    """
     load_dotenv()
     app = Flask(
         __name__,
@@ -16,19 +12,17 @@ def create_app():
         static_folder="../frontend/static"
     )
 
-    # Basic config (we'll harden this later)
-    app.config["SECRET_KEY"] = "dev-secret-key"
-    app.secret_key = os.getenv("FLASK_SECRET_KEY")
+    app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
+    app.secret_key = app.config["SECRET_KEY"]
 
-
-    # --- Register Blueprints (routes) ---
-    # NOTE: these files don't exist yet.
-    # We will create them step-by-step.
+    # Blueprints
     from backend.routes.pages import pages_bp
     from backend.routes.api_recommendation import api_bp
+    from backend.routes.api_web_search import web_search_bp   
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(pages_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(web_search_bp)                      
 
     return app

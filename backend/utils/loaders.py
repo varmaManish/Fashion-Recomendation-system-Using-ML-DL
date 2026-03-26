@@ -2,18 +2,14 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-# --------------------------------------------------
-# Resolve base paths safely
-# --------------------------------------------------
+
 BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "backend" / "data"
 
 FEATURES_PATH = DATA_DIR / "fashion_features.npy"
 METADATA_PATH = DATA_DIR / "fashion_metadata.csv"
 
-# --------------------------------------------------
-# Load metadata
-# --------------------------------------------------
+
 def load_metadata():
     """
     Load product metadata CSV.
@@ -27,9 +23,6 @@ def load_metadata():
     return df
 
 
-# --------------------------------------------------
-# Load features
-# --------------------------------------------------
 def load_features():
     """
     Load feature vectors (NumPy).
