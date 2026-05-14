@@ -1,13 +1,12 @@
 [build]
   command = "pip install -r requirements.txt"
-  publish = "frontend" # Point this to your frontend folder
+  publish = "frontend"
 
 [functions]
-  # This ensures your 'backend' folder is bundled with the function
+  directory = "netlify/functions"  # Add this line
   included_files = ["backend/**"]
 
 [[redirects]]
-  # This sends all requests starting with /api to your Flask function
   from = "/api/*"
   to = "/.netlify/functions/api"
   status = 200
